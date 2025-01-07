@@ -1,0 +1,57 @@
+version: '3.7'
+
+services:
+  mongo-1:
+    image: docker.arvancloud.ir/mongo
+    command: mongod --replSet mydb --bind_ip_all
+    ports:
+      - 27017:27017
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.mongo.replica == 1
+    volumes:
+      - mongo-data-1:/data/db
+      - mongo-config-1:/data/configdb
+    hostname: "mongo-1"
+
+  mongo-2:
+    image: docker.arvancloud.ir/mongo
+    command: mongod --replSet mydb --bind_ip_all
+    ports:
+      - 27018:27017
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.mongo.replica == 2
+    volumes:
+      - mongo-data-2:/data/db
+      - mongo-config-2:/data/configdb
+
+    networks:
+      - mongo_network
+    hostname: "mongo-2"
+
+
+
+volumes:
+  mongo-data-1:
+  mongo-config-1:
+  mongo-data-2:
+  mongo-config-2:
+
+networks:
+  mongo_network:
+    driver: overlay
+    attachable: true
+    driver_opts:
+      encrypted: "true"
+
